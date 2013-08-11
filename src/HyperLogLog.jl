@@ -8,10 +8,11 @@ module HyperLogLog
 		M::Vector{Uint32}
 		mask::Uint32
 		altmask::Uint32
-		# TODO: Include h here?
+		# h() must be a function of the form: Any -> Uint32
+		h::Function
 	end
 
-	function HLL(b::Integer)
+	function HLL(b::Integer, h::Function = hash32)
 		if !(4 <= b <= 16)
 			throw(ArgumentError("b must be an integer between 4 and 16"))
 		end
@@ -29,13 +30,19 @@ module HyperLogLog
 
 		altmask = ~mask
 
-		return HLL(m, M, mask, altmask)
+		return HLL(m, M, mask, altmask, h)
 	end
 
+	function Base.show(io::IO, counter::HLL)
+		@printf io "A HyperLogLog counter w/ %d registers" int(counter.m)
+		return
+	end
+
+	# Stream must be iterable
 	function consume!(counter::HLL, stream::Any)
 		for v in stream
-			x = h(v)
-			j = 1 + (x & counter.mask)
+			x = counter.h(v)
+			j = uint32(uint32(1) + (x & counter.mask))
 			w = x & counter.altmask
 			counter.M[j] = max(counter.M[j], rho(w))
 		end
@@ -44,6 +51,7 @@ module HyperLogLog
 
 	function estimate(counter::HLL)
 		S = 0.0
+
 		for j in 1:counter.m
 			S += 1 / (2^counter.M[j])
 		end
@@ -52,7 +60,7 @@ module HyperLogLog
 
 		E = alpha(counter.m) * counter.m^2 * Z
 
-		if E <= 5 / 2 * counter.m
+		if E <= 5//2 * counter.m
 			V = 0
 			for j in 1:counter.m
 				V += int(counter.M[j] == 0x00000000)
@@ -62,7 +70,7 @@ module HyperLogLog
 			else
 				E_star = E
 			end
-		elseif E <= 1 / 30 * 2^32
+		elseif E <= 1//30 * 2^32
 			E_star = E
 		else
 			E_star = -2^32 * log(1 - E / (2^32))
@@ -70,4 +78,11 @@ module HyperLogLog
 
 		return E_star
 	end
+
+	# TODO: Figure out details here
+	# function confint(counter::HLL)
+	# 	e = estimate(counter)
+	# 	delta = e * 1.04 / sqrt(counter.m)
+	# 	return e - delta, e + delta
+	# end
 end
