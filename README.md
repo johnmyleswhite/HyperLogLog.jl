@@ -1,6 +1,12 @@
 HyperLogLog.jl
 ==============
 
+# NOTICE
+
+**This package is unmaintained. Its reliability is not guaranteed.**
+
+# Introduction
+
 A simple HyperLogLog implementation in Julia
 
 # Usage Examples
