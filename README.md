@@ -29,7 +29,7 @@ In this example, we'll use a custom hash function:
 
 	using HyperLogLog
 
-	counter = HLL(8, x -> uint32(hash(x)))
+	counter = HLL(8, x -> UInt32(my_hash_function(x)))
 
 	consume!(counter, 1:100)
 	estimate(counter)
@@ -37,4 +37,4 @@ In this example, we'll use a custom hash function:
 	consume!(counter, 101:1000)
 	estimate(counter)
 
-Note that the hash function must return a `Uint32`. This is done to be consistent with the theory presented in the original HyperLogLog paper. We may allow 64-bit hashes in the future.
+Note that the hash function must return a `UInt32`. This is done to be consistent with the theory presented in the original HyperLogLog paper. We may allow 64-bit hashes in the future.

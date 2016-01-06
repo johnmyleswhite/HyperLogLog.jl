@@ -21,7 +21,7 @@ for b in b_values
 	end
 end
 
-@assert cor(counts, repeat([1:n_points], outer = [n_b])) > 0.99
+@assert cor(counts, repeat(collect(1:n_points), outer = [n_b])) > 0.98
 
 # abs_errors = counts - is
 # rel_errors = (counts - is) ./ is
